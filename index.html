@@ -537,7 +537,20 @@ svg.querySelectorAll(".teil").forEach(g => {
   });
 });
 
-karte.innerHTML = START;
+/* Direkteinstieg für die Folgestunde: ?start=einbau überspringt den Ausbau */
+function nurZusammenbau() {
+  REIHENFOLGE.forEach(id => {
+    const g = svg.querySelector(`.teil[data-id="${id}"]`);
+    raus.add(id);
+    aufWerkbank(id, g.querySelector("g"));
+    g.classList.add("weg");
+  });
+  starteEinbau();
+  sagen("Der Rechner ist zerlegt. Bau ihn zusammen — und beantworte zu jedem Teil die Frage.");
+}
+
+if (new URLSearchParams(location.search).get("start") === "einbau") nurZusammenbau();
+else karte.innerHTML = START;
 </script>
 </body>
 </html>
