@@ -278,6 +278,45 @@ const EINBAUTEXT = {
   seitenwand: "Die Seitenwand kommt zuletzt — sonst kommst du nicht mehr an die Teile.",
   netzkabel: "Strom ganz zum Schluss."
 };
+const TEILFRAGE = {
+  netzkabel: { f: "Warum muss der Stecker raus, bevor man das Gehäuse öffnet?",
+    a: ["Im Netzteil steht auch nach dem Ausschalten noch Spannung.",
+        "Sonst startet der Rechner von allein.",
+        "Damit man die Kabel besser sieht."], r: 0 },
+  seitenwand: { f: "Wozu ist das geschlossene Gehäuse gut?",
+    a: ["Es lenkt den Luftstrom: vorne kühle Luft rein, hinten warme raus.",
+        "Es macht den Rechner schneller.",
+        "Es speichert Daten."], r: 0 },
+  grafikkarte: { f: "Wofür ist die Grafikkarte da?",
+    a: ["Sie berechnet das Bild für den Monitor — das ist Ausgabe.",
+        "Sie speichert Dateien dauerhaft.",
+        "Sie versorgt die anderen Teile mit Strom."], r: 0 },
+  ram: { f: "Was passiert mit dem Inhalt des Arbeitsspeichers, wenn der Strom weg ist?",
+    a: ["Er ist weg — der RAM ist flüchtig.",
+        "Er wird automatisch auf die SSD gerettet.",
+        "Er bleibt etwa drei Tage erhalten."], r: 0 },
+  ssd: { f: "Was liegt auf der SSD?",
+    a: ["Betriebssystem, Programme und Dateien — auch ohne Strom.",
+        "Nur das, womit gerade gearbeitet wird.",
+        "Das Bild für den Monitor."], r: 0 },
+  netzteil: { f: "Was macht das Netzteil?",
+    a: ["Es macht aus 230 V die 12 V, 5 V und 3,3 V für die Bauteile.",
+        "Es rechnet Daten aus.",
+        "Es kühlt den Prozessor."], r: 0 },
+  kuehler: { f: "Warum braucht die CPU einen Kühler?",
+    a: ["Sie wird über 70 °C heiß und würde sonst abschalten.",
+        "Damit der Rechner leiser wird.",
+        "Damit der Strom besser fließt."], r: 0 },
+  cpu: { f: "Was macht die CPU?",
+    a: ["Sie holt Befehle aus dem Speicher, führt sie aus und schreibt das Ergebnis zurück.",
+        "Sie speichert Dateien dauerhaft.",
+        "Sie erzeugt das Bild für den Monitor."], r: 0 },
+  mainboard: { f: "Was ist die Aufgabe des Mainboards?",
+    a: ["Es verbindet alle Teile — über den Bus laufen die Daten.",
+        "Es kühlt die CPU.",
+        "Es holt den Strom aus der Steckdose."], r: 0 }
+};
+
 const FRAGEN = [
   { f: "Du schreibst einen Text, der Strom fällt aus — der Text ist weg. Warum?",
     a: ["Er lag im Arbeitsspeicher, und der ist flüchtig.", "Die SSD war zu langsam.",
@@ -287,13 +326,6 @@ const FRAGEN = [
     a: ["Im Arbeitsspeicher, zusammen mit seinen Daten.", "In der CPU.",
         "Auf der Grafikkarte.", "Im Netzteil."],
     r: 0, w: "Das ist die Von-Neumann-Idee: Programm und Daten liegen im selben Speicher. Die CPU holt sich die Befehle von dort." },
-  { f: "Welche zwei Teile stecken in der CPU?",
-    a: ["Rechenwerk und Steuerwerk.", "Arbeitsspeicher und Festplatte.",
-        "Eingabe und Ausgabe.", "Chipsatz und Bus."],
-    r: 0, w: "Das Rechenwerk rechnet und vergleicht, das Steuerwerk holt die Befehle und steuert den Ablauf." },
-  { f: "Was gehört im EVA-Prinzip zur Eingabe?",
-    a: ["Tastatur und Maus.", "Die Grafikkarte.", "Der Arbeitsspeicher.", "Das Mainboard."],
-    r: 0, w: "Im Gehäuse steckt kein einziges Eingabegerät — die hängen außen dran." },
   { f: "Was ist mehr: 16 GB Arbeitsspeicher oder 1 TB SSD?",
     a: ["Die SSD — ungefähr 60-mal so viel.", "Der Arbeitsspeicher.",
         "Beides gleich viel.", "Das kann man nicht vergleichen."],
@@ -312,6 +344,7 @@ const raus = new Set();
 const drin = new Set();
 let modus = "ausbau";
 let fehlversuche = 0;
+let richtigeTeile = 0;
 const svg = document.querySelector("svg.pc");
 const kacheln = document.getElementById("kacheln");
 const meldung = document.getElementById("meldung");
@@ -380,8 +413,9 @@ function fertig() {
 function aufgabe() {
   karte.innerHTML = `<h2>Zusammenbau</h2>
     <p>Jetzt umgekehrt: Klick die Teile auf der Werkbank in der Reihenfolge an, in der sie
-    eingebaut werden.</p>
-    <p><b>Eingebaut:</b> ${drin.size} / 9 &nbsp;·&nbsp; <b>Fehlversuche:</b> ${fehlversuche}</p>
+    eingebaut werden. Zu jedem Teil kommt eine Frage — die Antwort stand vorhin beim Ausbau da.</p>
+    <p><b>Eingebaut:</b> ${drin.size} / 9 &nbsp;·&nbsp; <b>Fehlversuche:</b> ${fehlversuche}
+       &nbsp;·&nbsp; <b>Fragen richtig:</b> ${richtigeTeile}</p>
     <div class="wie">Diesmal sage ich dir nur, <b>dass</b> etwas nicht geht — den Grund musst du
     selbst wissen.</div>`;
 }
@@ -408,20 +442,47 @@ function kachelKlick(id, kachel) {
     aufgabe();
     return;
   }
+  teilfrage(id, kachel);
+}
+
+function mischen(n) {
+  const f = n.map((_, i) => i);
+  for (let i = f.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [f[i], f[j]] = [f[j], f[i]];
+  }
+  return f;
+}
+
+function teilfrage(id, kachel) {
+  const q = TEILFRAGE[id];
+  karte.innerHTML = `<div class="rolle">${TEILE[id].name.replace(/ \(.*\)/, "")}</div>
+    <p><b>Bevor es eingebaut wird:</b> ${q.f}</p>` +
+    mischen(q.a).map(i => `<button class="antwort" data-i="${i}">${q.a[i]}</button>`).join("");
+  karte.querySelectorAll(".antwort").forEach(b => b.onclick = () => {
+    const gut = +b.dataset.i === q.r;
+    if (gut) { richtigeTeile++; sagen("Richtig. <b>" + TEILE[id].name + "</b> sitzt.", "gut"); }
+    else { sagen("Nicht ganz. Richtig ist: <b>" + q.a[q.r] + "</b>", "fehler"); }
+    einbauen(id, kachel);
+  });
+}
+
+function einbauen(id, kachel) {
   drin.add(id);
   svg.querySelector(`.teil[data-id="${id}"]`).classList.remove("weg");
   kachel.remove();
   fortschritt.textContent = drin.size + " / 9 eingebaut";
   if (drin.size === REIHENFOLGE.length) {
-    const lob = fehlversuche === 0 ? "Kein einziger Fehlversuch. Das sitzt."
-      : fehlversuche <= 3 ? "Fast ohne Umweg — die Reihenfolge hast du verstanden."
-      : "Geschafft. Schau dir die Reihenfolge noch einmal an, da war einiges Raten dabei.";
+    const lob = fehlversuche === 0 && richtigeTeile === 9 ? "Kein Fehlversuch, keine falsche Antwort. Das sitzt."
+      : fehlversuche <= 3 && richtigeTeile >= 7 ? "Guter Durchgang — Reihenfolge und Aufgaben stimmen weitgehend."
+      : "Geschafft. Geh die Teile noch einmal durch, da war einiges Raten dabei.";
     karte.innerHTML = `<h2>Der Rechner steht</h2><p>${lob}</p>
-      <p><b>Fehlversuche:</b> ${fehlversuche}</p>
+      <p><b>Reihenfolge:</b> ${fehlversuche} ${fehlversuche === 1 ? "Fehlversuch" : "Fehlversuche"} &nbsp;·&nbsp;
+         <b>Fragen:</b> ${richtigeTeile} von 9 richtig</p>
       <div class="wie"><b>Die Reihenfolge:</b> Mainboard ins Gehäuse · CPU in den Sockel ·
       Kühler auf die CPU · RAM in die Bänke · Grafikkarte in den PCIe-Steckplatz · SSD und
       Netzteil · Seitenwand zu · und erst ganz zum Schluss der Strom.</div>
-      <button id="quiz">Fünf Fragen zum Schluss →</button>`;
+      <button id="quiz">Drei Fragen zum Schluss →</button>`;
     sagen("Fertig zusammengebaut.", "gut");
     document.getElementById("kacheln").innerHTML = '<span id="leer">Alles wieder eingebaut.</span>';
     document.getElementById("quiz").onclick = () => frage(0, 0);
@@ -435,7 +496,7 @@ function frage(nr, richtig) {
   if (nr >= FRAGEN.length) {
     karte.innerHTML = `<h2>${richtig} von ${FRAGEN.length} richtig</h2>
       <p>${richtig === FRAGEN.length ? "Alles sitzt — Aufbau und Prinzip."
-        : richtig >= 3 ? "Guter Stand. Schau dir die falschen Antworten noch einmal an."
+        : richtig >= 2 ? "Guter Stand. Schau dir die falsche Antwort noch einmal an."
         : "Geh die Teile noch einmal durch — vor allem Speicher und CPU."}</p>
       <button onclick="location.reload()">Von vorne</button>`;
     sagen("Geschafft.", "gut");
