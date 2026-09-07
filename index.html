@@ -40,6 +40,26 @@
   body.einbau .kachel:hover { border-color: var(--akzent); box-shadow: 0 0 0 2px rgba(47,111,143,.15); }
   button.antwort { display: block; width: 100%; text-align: left; margin-top: 6px; }
 
+  /* Grosser Dialog fuer Moduswechsel und Fragen */
+  #overlay { position: fixed; inset: 0; z-index: 10; padding: 24px;
+             background: rgba(27,26,24,.55); display: flex; align-items: center; justify-content: center; }
+  #overlay[hidden] { display: none; }
+  .dialog { background: #fff; border-radius: 16px; padding: 30px 34px; max-width: 660px; width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,.3); animation: auf .18s ease-out; }
+  @keyframes auf { from { transform: translateY(14px); opacity: 0 } to { transform: none; opacity: 1 } }
+  .dialog h2 { margin: 0 0 10px; font-size: 30px; line-height: 1.15; }
+  .dialog .frage { font-size: 22px; line-height: 1.4; margin: 6px 0 20px; }
+  .dialog .woher { font-size: 14px; color: var(--muted); margin: -12px 0 18px; }
+  .dialog button.antwort { font-size: 17px; line-height: 1.35; padding: 14px 18px; margin-top: 10px; }
+  .dialog button.gross { font-size: 19px; font-weight: 600; padding: 13px 26px;
+                         background: var(--akzent); color: #fff; border-color: var(--akzent); }
+  .dialog button.gross:hover { background: #26596f; color: #fff; }
+  .dialog .rueck { font-size: 18px; line-height: 1.4; padding: 14px 16px; border-radius: 10px; margin: 0 0 18px; }
+  .dialog .rueck.gut { background: #eaf5ec; color: var(--gruen); }
+  .dialog .rueck.fehler { background: #fbeeec; color: var(--rot); }
+  .dialog .zeile { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 6px; }
+  body.einbau header { background: #eef3f6; }
+
   aside { flex: 0 0 340px; }
   .meldung { border-radius: 8px; padding: 10px 12px; font-size: 15px; margin-bottom: 12px;
              border-left: 4px solid var(--muted); background: #fff; }
@@ -210,6 +230,8 @@
     </div>
   </div>
 
+  <div id="overlay" hidden><div class="dialog" id="dialog"></div></div>
+
   <aside>
     <div id="meldung" class="meldung">Klick auf ein Bauteil. Wenn es noch nicht drankommt, sage ich dir, warum.</div>
     <div id="karte" class="karte"></div>
@@ -357,6 +379,11 @@ const START = `<h2>Ein Rechner, neun Teile</h2>
   <p>Zu jedem Teil erfährst du, wofür es da ist und wie man es ausbaut.</p>
   <div class="wie"><b>Tipp:</b> Fang bei dem an, was nichts mit dem Inneren des Rechners zu tun hat.</div>`;
 
+const overlay = document.getElementById("overlay");
+const dialog = document.getElementById("dialog");
+function zeigeDialog(html) { dialog.innerHTML = html; overlay.hidden = false; }
+function zuDialog() { overlay.hidden = true; }
+
 function sagen(txt, art) {
   meldung.className = "meldung" + (art ? " " + art : "");
   meldung.innerHTML = txt;
@@ -405,9 +432,21 @@ function fertig() {
     Entscheidende: Im Speicher liegt auch das <b>Programm</b> selbst. So ist jeder Rechner gebaut,
     seit 1945.<br><br>Dieselben Bausteine stecken in Handy, Konsole und Router — nur kleiner und
     fest verlötet.</div>
-    <button id="los">Jetzt zusammenbauen →</button>`;
+    <p class="wie">Rechts oben siehst du, wie weit du bist.</p>`;
   sagen("Fertig. Der Rechner ist zerlegt — und du weißt, was du in der Hand hältst.", "gut");
-  document.getElementById("los").onclick = starteEinbau;
+  zeigeDialog(`<h2>Ausbau geschafft — 9 von 9</h2>
+    <p class="frage">Jetzt umgekehrt: <b>Bau den Rechner wieder zusammen.</b><br>
+    Zu jedem Teil kommt eine Frage — die Antwort stand vorhin beim Ausbau daneben.</p>
+    <div class="zeile">
+      <button class="gross" id="los">Jetzt zusammenbauen →</button>
+      <button id="spaeter">Erst die Übersicht lesen</button>
+    </div>`);
+  document.getElementById("los").onclick = () => { zuDialog(); starteEinbau(); };
+  document.getElementById("spaeter").onclick = () => {
+    zuDialog();
+    sagen('Wenn du so weit bist: <button id="los2">Jetzt zusammenbauen →</button>');
+    document.getElementById("los2").onclick = starteEinbau;
+  };
 }
 
 function aufgabe() {
@@ -430,6 +469,7 @@ function starteEinbau() {
   fortschritt.textContent = "0 / 9 eingebaut";
   sagen("Bau den Rechner zusammen. Welches Teil kommt zuerst?");
   aufgabe();
+  document.getElementById("kacheln").scrollIntoView({ block: "nearest" });
 }
 
 function kachelKlick(id, kachel) {
@@ -456,14 +496,23 @@ function mischen(n) {
 
 function teilfrage(id, kachel) {
   const q = TEILFRAGE[id];
-  karte.innerHTML = `<div class="rolle">${TEILE[id].name.replace(/ \(.*\)/, "")}</div>
-    <p><b>Bevor es eingebaut wird:</b> ${q.f}</p>` +
-    mischen(q.a).map(i => `<button class="antwort" data-i="${i}">${q.a[i]}</button>`).join("");
-  karte.querySelectorAll(".antwort").forEach(b => b.onclick = () => {
+  zeigeDialog(`<div class="rolle">${TEILE[id].name.replace(/ \(.*\)/, "")}</div>
+    <p class="frage">${q.f}</p>
+    <p class="woher">Bevor das Teil eingebaut wird.</p>` +
+    mischen(q.a).map(i => `<button class="antwort" data-i="${i}">${q.a[i]}</button>`).join(""));
+  dialog.querySelectorAll(".antwort").forEach(b => b.onclick = () => {
     const gut = +b.dataset.i === q.r;
-    if (gut) { richtigeTeile++; sagen("Richtig. <b>" + TEILE[id].name + "</b> sitzt.", "gut"); }
-    else { sagen("Nicht ganz. Richtig ist: <b>" + q.a[q.r] + "</b>", "fehler"); }
-    einbauen(id, kachel);
+    if (gut) richtigeTeile++;
+    zeigeDialog(`<div class="rueck ${gut ? "gut" : "fehler"}">
+        ${gut ? "<b>Richtig.</b> " + q.a[q.r]
+              : "<b>Nicht ganz.</b> Richtig ist: " + q.a[q.r]}</div>
+      <div class="zeile"><button class="gross" id="weiter">${TEILE[id].name} einbauen →</button></div>`);
+    document.getElementById("weiter").onclick = () => {
+      zuDialog();
+      sagen(gut ? "<b>" + TEILE[id].name + "</b> sitzt." : "<b>" + TEILE[id].name + "</b> sitzt — die Frage schaust du dir noch mal an.",
+            gut ? "gut" : "fehler");
+      einbauen(id, kachel);
+    };
   });
 }
 
@@ -482,9 +531,14 @@ function einbauen(id, kachel) {
       <div class="wie"><b>Die Reihenfolge:</b> Mainboard ins Gehäuse · CPU in den Sockel ·
       Kühler auf die CPU · RAM in die Bänke · Grafikkarte in den PCIe-Steckplatz · SSD und
       Netzteil · Seitenwand zu · und erst ganz zum Schluss der Strom.</div>
-      <button id="quiz">Drei Fragen zum Schluss →</button>`;
+      `;
     sagen("Fertig zusammengebaut.", "gut");
     document.getElementById("kacheln").innerHTML = '<span id="leer">Alles wieder eingebaut.</span>';
+    zeigeDialog(`<h2>Der Rechner steht wieder</h2>
+      <p class="frage">${lob}<br>
+      <b>Reihenfolge:</b> ${fehlversuche} ${fehlversuche === 1 ? "Fehlversuch" : "Fehlversuche"} &nbsp;·&nbsp;
+      <b>Fragen:</b> ${richtigeTeile} von 9 richtig</p>
+      <div class="zeile"><button class="gross" id="quiz">Drei Fragen zum Schluss →</button></div>`);
     document.getElementById("quiz").onclick = () => frage(0, 0);
   } else {
     sagen("<b>" + TEILE[id].name + "</b> sitzt.", "gut");
@@ -494,27 +548,25 @@ function einbauen(id, kachel) {
 
 function frage(nr, richtig) {
   if (nr >= FRAGEN.length) {
-    karte.innerHTML = `<h2>${richtig} von ${FRAGEN.length} richtig</h2>
-      <p>${richtig === FRAGEN.length ? "Alles sitzt — Aufbau und Prinzip."
+    zeigeDialog(`<h2>${richtig} von ${FRAGEN.length} richtig</h2>
+      <p class="frage">${richtig === FRAGEN.length ? "Alles sitzt — Aufbau und Prinzip."
         : richtig >= 2 ? "Guter Stand. Schau dir die falsche Antwort noch einmal an."
         : "Geh die Teile noch einmal durch — vor allem Speicher und CPU."}</p>
-      <button onclick="location.reload()">Von vorne</button>`;
+      <div class="zeile"><button class="gross" onclick="location.reload()">Von vorne</button>
+      <button id="fertigzu">Schließen</button></div>`);
+    document.getElementById("fertigzu").onclick = zuDialog;
     sagen("Geschafft.", "gut");
     return;
   }
   const q = FRAGEN[nr];
-  const folge = q.a.map((_, i) => i);
-  for (let i = folge.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [folge[i], folge[j]] = [folge[j], folge[i]];
-  }
-  karte.innerHTML = `<h2>Frage ${nr + 1} von ${FRAGEN.length}</h2><p>${q.f}</p>` +
-    folge.map(i => `<button class="antwort" data-i="${i}">${q.a[i]}</button>`).join("");
-  karte.querySelectorAll(".antwort").forEach(b => b.onclick = () => {
+  zeigeDialog(`<div class="rolle">Frage ${nr + 1} von ${FRAGEN.length}</div>
+    <p class="frage">${q.f}</p>` +
+    mischen(q.a).map(i => `<button class="antwort" data-i="${i}">${q.a[i]}</button>`).join(""));
+  dialog.querySelectorAll(".antwort").forEach(b => b.onclick = () => {
     const gut = +b.dataset.i === q.r;
-    sagen((gut ? "Richtig. " : "Nicht ganz. ") + q.w, gut ? "gut" : "fehler");
-    karte.querySelectorAll(".antwort").forEach(x => x.disabled = true);
-    karte.innerHTML += `<button id="weiter">Weiter →</button>`;
+    zeigeDialog(`<div class="rueck ${gut ? "gut" : "fehler"}">
+        <b>${gut ? "Richtig." : "Nicht ganz."}</b> ${q.w}</div>
+      <div class="zeile"><button class="gross" id="weiter">Weiter →</button></div>`);
     document.getElementById("weiter").onclick = () => frage(nr + 1, richtig + (gut ? 1 : 0));
   });
 }
