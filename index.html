@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reise ins Innere des PCs — Ausbau</title>
+<style>
+  :root {
+    --bg: #faf9f7; --rahmen: #e2ded7; --muted: #6b6862; --akzent: #2f6f8f;
+    --rot: #a33a2a; --gruen: #3f7a4a; --text: #1b1a18;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
+           padding: 14px 22px; border-bottom: 2px solid var(--rahmen); }
+  header h1 { font-size: 20px; margin: 0; }
+  header .kicker { color: var(--muted); font-size: 14px; }
+  #fortschritt { margin-left: auto; font-weight: 700; color: var(--akzent); }
+  main { display: flex; gap: 22px; padding: 18px 22px 28px; align-items: flex-start; }
+  .buehne { flex: 1 1 auto; min-width: 0; }
+  svg.pc { height: 66vh; max-width: 100%; display: block; margin: 0 auto; }
+
+  .teil { cursor: pointer; }
+  .teil:hover { filter: drop-shadow(0 0 5px var(--akzent)); }
+  .teil.weg { opacity: 0; pointer-events: none; transition: opacity .35s; }
+  .lab { font: 600 13px -apple-system, "Segoe UI", sans-serif; fill: #35322e; pointer-events: none; }
+  .lab.hell { fill: #f2efe9; }
+
+  #werkbank { margin-top: 10px; border-top: 2px solid var(--rahmen); padding-top: 10px; }
+  #werkbank h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+                 color: var(--muted); margin: 0 0 8px; }
+  #kacheln { display: flex; flex-wrap: wrap; gap: 8px; min-height: 62px; }
+  .kachel { width: 92px; border: 1px solid var(--rahmen); border-radius: 8px; background: #fff;
+            padding: 4px; text-align: center; }
+  .kachel svg { width: 100%; height: 42px; }
+  .kachel span { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
+  #leer { color: var(--muted); font-size: 14px; font-style: italic; }
+  body.einbau .kachel { cursor: pointer; }
+  body.einbau .kachel:hover { border-color: var(--akzent); box-shadow: 0 0 0 2px rgba(47,111,143,.15); }
+  button.antwort { display: block; width: 100%; text-align: left; margin-top: 6px; }
+
+  aside { flex: 0 0 340px; }
+  .meldung { border-radius: 8px; padding: 10px 12px; font-size: 15px; margin-bottom: 12px;
+             border-left: 4px solid var(--muted); background: #fff; }
+  .meldung.fehler { border-left-color: var(--rot); color: var(--rot); }
+  .meldung.gut { border-left-color: var(--gruen); color: var(--gruen); }
+  .karte { border: 1px solid var(--rahmen); border-radius: 10px; background: #fff; padding: 14px 16px; }
+  .karte h2 { margin: 0 0 2px; font-size: 19px; }
+  .rolle { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .04em;
+           text-transform: uppercase; color: #fff; background: var(--akzent);
+           border-radius: 20px; padding: 2px 10px; margin-bottom: 10px; }
+  .karte p { margin: 0 0 10px; font-size: 15px; line-height: 1.5; }
+  .karte .wie { border-top: 1px dashed var(--rahmen); padding-top: 10px; font-size: 14px; color: var(--muted); }
+  .karte .wie b { color: var(--text); }
+  button { font: inherit; font-size: 14px; padding: 7px 14px; border-radius: 8px;
+           border: 1px solid var(--rahmen); background: #fff; cursor: pointer; margin-top: 12px; }
+  button:hover { border-color: var(--akzent); color: var(--akzent); }
+  table.eva { width: 100%; border-collapse: collapse; font-size: 14px; margin: 6px 0 4px; }
+  table.eva td { padding: 4px 0; vertical-align: top; }
+  table.eva td:first-child { font-weight: 700; width: 108px; color: var(--akzent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Reise ins Innere des PCs</h1>
+  <span class="kicker" id="unterzeile">Bau den Rechner auseinander — in der richtigen Reihenfolge.</span>
+  <span id="fortschritt">0 / 9 ausgebaut</span>
+</header>
+
+<main>
+  <div class="buehne">
+    <svg class="pc" viewBox="0 0 620 520" role="img" aria-label="Geöffneter Computer von der Seite">
+      <!-- Steckdose -->
+      <rect x="8" y="440" width="34" height="46" rx="5" fill="#e8e4dc" stroke="#c9c4bb" stroke-width="2"/>
+      <circle cx="20" cy="458" r="3" fill="#6b6862"/><circle cx="30" cy="458" r="3" fill="#6b6862"/>
+
+      <!-- Gehäuse -->
+      <rect x="70" y="20" width="480" height="470" rx="10" fill="#cfcac2" stroke="#a8a29a" stroke-width="2"/>
+      <rect x="84" y="34" width="452" height="442" rx="4" fill="#f2efe9"/>
+
+      <!-- Mainboard -->
+      <g class="teil" data-id="mainboard">
+        <g id="p-mainboard">
+          <rect x="228" y="52" width="296" height="406" rx="6" fill="#3f6b46" stroke="#2c4c31" stroke-width="2"/>
+          <g stroke="#5c8f63" stroke-width="2" fill="none">
+            <path d="M244 78 H352 V96 H452"/><path d="M244 106 H300 V148"/>
+            <path d="M470 120 V210 H430"/><path d="M250 300 H360 V340"/>
+            <path d="M400 430 H500 V300"/><path d="M244 400 H300 V430"/>
+          </g>
+          <g fill="#2c4c31">
+            <circle cx="240" cy="64" r="5"/><circle cx="512" cy="64" r="5"/>
+            <circle cx="240" cy="446" r="5"/><circle cx="512" cy="446" r="5"/>
+          </g>
+          <rect x="452" y="360" width="60" height="34" rx="3" fill="#2c4c31"/>
+          <text class="lab hell" x="482" y="382" text-anchor="middle">Chipsatz</text>
+        </g>
+      </g>
+
+      <!-- CPU (unter dem Kühler) -->
+      <g class="teil" data-id="cpu">
+        <g id="p-cpu">
+          <rect x="286" y="128" width="86" height="86" rx="4" fill="#c9c4bb" stroke="#8a857d" stroke-width="2"/>
+          <rect x="296" y="138" width="66" height="66" rx="2" fill="#8f9aa5" stroke="#6f7a85" stroke-width="2"/>
+          <text class="lab" x="329" y="176" text-anchor="middle">CPU</text>
+        </g>
+      </g>
+
+      <!-- CPU-Kühler -->
+      <g class="teil" data-id="kuehler">
+        <g id="p-kuehler">
+          <rect x="266" y="108" width="126" height="126" rx="6" fill="#b9c3cc" stroke="#7d8790" stroke-width="2"/>
+          <g stroke="#8f9aa5" stroke-width="3">
+            <path d="M274 118 V224"/><path d="M290 118 V224"/><path d="M306 118 V224"/>
+            <path d="M322 118 V224"/><path d="M338 118 V224"/><path d="M354 118 V224"/>
+            <path d="M370 118 V224"/><path d="M384 118 V224"/>
+          </g>
+          <circle cx="329" cy="171" r="44" fill="#5f6a74" stroke="#454e56" stroke-width="2"/>
+          <circle cx="329" cy="171" r="12" fill="#3a4249"/>
+          <g fill="#7d8790">
+            <path d="M329 133 q22 14 8 34 q-14 -18 -8 -34"/>
+            <path d="M367 171 q-14 22 -34 8 q18 -14 34 -8"/>
+            <path d="M329 209 q-22 -14 -8 -34 q14 18 8 34"/>
+            <path d="M291 171 q14 -22 34 -8 q-18 14 -34 8"/>
+          </g>
+        </g>
+      </g>
+
+      <!-- RAM -->
+      <g class="teil" data-id="ram">
+        <g id="p-ram">
+          <rect x="410" y="96" width="22" height="150" rx="3" fill="#1f2c3a" stroke="#0f1720" stroke-width="2"/>
+          <rect x="440" y="96" width="22" height="150" rx="3" fill="#1f2c3a" stroke="#0f1720" stroke-width="2"/>
+          <g fill="#c8b06a">
+            <rect x="414" y="112" width="14" height="16"/><rect x="414" y="136" width="14" height="16"/>
+            <rect x="414" y="160" width="14" height="16"/><rect x="414" y="184" width="14" height="16"/>
+            <rect x="444" y="112" width="14" height="16"/><rect x="444" y="136" width="14" height="16"/>
+            <rect x="444" y="160" width="14" height="16"/><rect x="444" y="184" width="14" height="16"/>
+          </g>
+          <text class="lab hell" x="436" y="266" text-anchor="middle">RAM</text>
+        </g>
+      </g>
+
+      <!-- Grafikkarte -->
+      <g class="teil" data-id="grafikkarte">
+        <g id="p-grafikkarte">
+          <rect x="240" y="292" width="270" height="76" rx="5" fill="#2a2f36" stroke="#171b20" stroke-width="2"/>
+          <circle cx="300" cy="330" r="26" fill="#454e56" stroke="#2a2f36" stroke-width="2"/>
+          <circle cx="300" cy="330" r="8" fill="#2a2f36"/>
+          <circle cx="400" cy="330" r="26" fill="#454e56" stroke="#2a2f36" stroke-width="2"/>
+          <circle cx="400" cy="330" r="8" fill="#2a2f36"/>
+          <rect x="452" y="304" width="46" height="52" rx="3" fill="#454e56"/>
+          <rect x="240" y="368" width="150" height="10" fill="#c8b06a"/>
+          <text class="lab hell" x="475" y="334" text-anchor="middle">GPU</text>
+        </g>
+      </g>
+
+      <!-- SSD -->
+      <g class="teil" data-id="ssd">
+        <g id="p-ssd">
+          <rect x="104" y="54" width="108" height="72" rx="5" fill="#8f9aa5" stroke="#6f7a85" stroke-width="2"/>
+          <rect x="114" y="64" width="88" height="52" rx="3" fill="#a9b3bc"/>
+          <rect x="196" y="76" width="14" height="12" fill="#454e56"/>
+          <rect x="196" y="94" width="14" height="12" fill="#454e56"/>
+          <text class="lab" x="158" y="96" text-anchor="middle">SSD</text>
+          <path d="M210 84 C 232 84 232 200 250 200" stroke="#a33a2a" stroke-width="4" fill="none"/>
+        </g>
+      </g>
+
+      <!-- Netzteil -->
+      <g class="teil" data-id="netzteil">
+        <g id="p-netzteil">
+          <rect x="100" y="352" width="120" height="106" rx="5" fill="#7d8790" stroke="#5f6a74" stroke-width="2"/>
+          <circle cx="160" cy="398" r="34" fill="#5f6a74"/>
+          <g stroke="#98a1aa" stroke-width="3" fill="none">
+            <path d="M160 366 v64"/><path d="M128 398 h64"/><path d="M138 376 l44 44"/><path d="M182 376 l-44 44"/>
+          </g>
+          <text class="lab hell" x="160" y="450" text-anchor="middle">Netzteil</text>
+          <g stroke="#2a2f36" stroke-width="5" fill="none">
+            <path d="M220 380 C 246 380 236 300 262 300"/>
+            <path d="M220 410 C 250 410 244 430 268 430"/>
+          </g>
+        </g>
+      </g>
+
+      <!-- Netzkabel -->
+      <g class="teil" data-id="netzkabel">
+        <g id="p-netzkabel">
+          <path d="M100 424 C 70 424 62 462 42 462" stroke="#2a2f36" stroke-width="6" fill="none"/>
+          <rect x="34" y="450" width="18" height="24" rx="3" fill="#2a2f36"/>
+        </g>
+      </g>
+
+      <!-- Seitenwand -->
+      <g class="teil" data-id="seitenwand">
+        <g id="p-seitenwand">
+          <rect x="70" y="20" width="480" height="470" rx="10" fill="#b9bfc4" fill-opacity=".82"
+                stroke="#8a9095" stroke-width="3"/>
+          <path d="M110 490 L330 20 L400 20 L180 490 Z" fill="#ffffff" fill-opacity=".18"/>
+          <circle cx="530" cy="40" r="6" fill="#8a9095"/><circle cx="530" cy="470" r="6" fill="#8a9095"/>
+          <text class="lab" x="310" y="264" text-anchor="middle" font-size="18">Seitenwand</text>
+        </g>
+      </g>
+    </svg>
+
+    <div id="werkbank">
+      <h2>Werkbank</h2>
+      <div id="kacheln"><span id="leer">Noch nichts ausgebaut.</span></div>
+    </div>
+  </div>
+
+  <aside>
+    <div id="meldung" class="meldung">Klick auf ein Bauteil. Wenn es noch nicht drankommt, sage ich dir, warum.</div>
+    <div id="karte" class="karte"></div>
+  </aside>
+</main>
+
+<script>
+const TEILE = {
+  netzkabel: {
+    name: "Netzkabel", rolle: "Sicherheit", braucht: [],
+    text: "<p>Bevor irgendetwas anderes passiert: Stecker raus. Ein Computer ist auch im ausgeschalteten Zustand mit dem Stromnetz verbunden — das Netzteil steht unter Spannung, und im Netzteil sitzen Kondensatoren, die die Ladung noch eine Weile halten.</p><p>Zweite Regel, gleich danach: Fass einmal das blanke Metall des Gehäuses an, bevor du ein Bauteil anfasst. Damit lädst du dich statisch ab. Eine Entladung, die du nicht einmal spürst, kann einen Chip zerstören.</p>",
+    wie: "<b>So geht es:</b> Kaltgerätestecker hinten am Netzteil abziehen, dann den Stecker aus der Steckdose."
+  },
+  seitenwand: {
+    name: "Seitenwand", rolle: "Gehäuse", braucht: ["netzkabel"],
+    text: "<p>Das Gehäuse hält alle Teile an ihrem Platz, schirmt sie ab und lenkt den Luftstrom: vorne kühle Luft rein, hinten warme raus. Deshalb läuft ein offener Rechner nicht automatisch kühler.</p>",
+    wie: "<b>So geht es:</b> Die zwei Rändelschrauben an der Rückseite lösen, die Wand ein Stück nach hinten schieben, dann abheben."
+  },
+  grafikkarte: {
+    name: "Grafikkarte", rolle: "Ausgabe", braucht: ["seitenwand"],
+    text: "<p>Die Grafikkarte rechnet aus, was auf dem Monitor erscheint — sie gehört im EVA-Prinzip zur <b>Ausgabe</b>. Sie ist im Grunde ein kleiner Computer im Computer: eigener Prozessor (GPU) und eigener Speicher.</p><p>Sie steckt in einem PCIe-Steckplatz. Weil sie viel Strom braucht, hängt oft ein extra Kabel vom Netzteil daran.</p>",
+    wie: "<b>So geht es:</b> Schraube am Slotblech lösen, das Stromkabel abziehen, die Halteklammer am Ende des Steckplatzes herunterdrücken, dann gerade herausziehen."
+  },
+  ram: {
+    name: "Arbeitsspeicher (RAM)", rolle: "Speicher · flüchtig", braucht: ["seitenwand"],
+    text: "<p>Im RAM liegt das, womit die CPU <b>gerade jetzt</b> arbeitet: das laufende Programm und seine Daten. Er ist sehr schnell — aber flüchtig: Strom weg, Inhalt weg. Genau deshalb ist ungespeicherte Arbeit nach einem Stromausfall verloren.</p><p>Das ist der Kern der Von-Neumann-Idee: Im selben Speicher liegen <b>Daten und Programm</b> — beides als Zahlen. Deshalb kann ein Rechner alles ausführen, was man ihm lädt, statt nur eine fest eingebaute Aufgabe zu können.</p><p>Üblich sind heute 8 oder 16 <b>Gigabyte</b>.</p>",
+    wie: "<b>So geht es:</b> Die Klemmen an beiden Enden des Steckplatzes nach außen drücken — der Riegel springt von selbst ein Stück heraus."
+  },
+  ssd: {
+    name: "SSD (Massenspeicher)", rolle: "Speicher · dauerhaft", braucht: ["seitenwand"],
+    text: "<p>Hier liegen Betriebssystem, Programme und deine Dateien — auch ohne Strom. Beim Start wird alles, was gebraucht wird, von der SSD in den RAM geladen.</p><p>Der Unterschied zur alten Festplatte: keine Scheibe, kein Schreibkopf, keine beweglichen Teile, sondern Speicherzellen wie in einem USB-Stick. Das macht sie schneller und unempfindlicher gegen Erschütterung.</p><p>Zum Größenvergleich: 1 <b>Terabyte</b> sind rund 1000 Gigabyte — etwa 60-mal so viel wie der Arbeitsspeicher. Ein Handyfoto braucht ungefähr 4 Megabyte; davon passen rund 250 000 auf die SSD.</p>",
+    wie: "<b>So geht es:</b> Erst das Datenkabel (SATA) und das Stromkabel abziehen, dann die Schrauben am Laufwerkskäfig lösen."
+  },
+  netzteil: {
+    name: "Netzteil", rolle: "Versorgung", braucht: ["seitenwand"],
+    text: "<p>Das Netzteil verarbeitet keine Daten. Es macht aus den 230 Volt Wechselspannung der Steckdose die Gleichspannungen, die die Bauteile brauchen: 12 V, 5 V und 3,3 V.</p><p>Von hier gehen die dicken Kabelstränge ab — der breite 24-polige Stecker zum Mainboard, ein weiterer zur CPU, dazu Stecker für Laufwerke und Grafikkarte.</p>",
+    wie: "<b>So geht es:</b> Alle Stecker abziehen (am Stecker anfassen, nicht am Kabel), dann die vier Schrauben an der Gehäuserückseite lösen."
+  },
+  kuehler: {
+    name: "CPU-Kühler", rolle: "Versorgung", braucht: ["seitenwand"],
+    text: "<p>Die CPU wird im Betrieb über 70 °C heiß. Der Kühlkörper nimmt die Wärme auf, seine Lamellen vergrößern die Fläche, der Lüfter bläst sie weg. Ohne Kühler taktet ein Prozessor nach Sekunden herunter oder schaltet ab.</p><p>Zwischen CPU und Kühler sitzt Wärmeleitpaste — eine hauchdünne Schicht, die die letzten Luftspalte füllt. Beim Wiedereinbau muss sie erneuert werden.</p>",
+    wie: "<b>So geht es:</b> Lüfterkabel vom Mainboard abziehen, die vier Halteklammern lösen, den Kühler leicht drehen und abheben — er klebt an der Paste."
+  },
+  cpu: {
+    name: "Prozessor (CPU)", rolle: "Verarbeitung", braucht: ["seitenwand", "kuehler"],
+    text: "<p>Das ist das <b>V</b> im EVA-Prinzip. Die CPU holt einen Befehl aus dem Speicher, entschlüsselt ihn, führt ihn aus und schreibt das Ergebnis zurück — und das milliardenfach pro Sekunde. Dieser Ablauf ist der Von-Neumann-Zyklus.</p><p>Innen sind es zwei Teile: das Rechenwerk, das rechnet und vergleicht, und das Steuerwerk, das die Befehle holt und den Ablauf steuert.</p>",
+    wie: "<b>So geht es:</b> Den Hebel am Sockel entriegeln, den Bügel öffnen, die CPU <b>senkrecht</b> herausheben. Nur an den Kanten anfassen, nie an den Kontakten."
+  },
+  mainboard: {
+    name: "Mainboard", rolle: "Verarbeitung", braucht: ["seitenwand", "grafikkarte", "ram", "cpu", "netzteil", "ssd"],
+    text: "<p>Das Mainboard verbindet alles miteinander. Die feinen Leiterbahnen sind die Straßen, über die Daten fahren — der Bus. Der Chipsatz regelt, wer wann fahren darf.</p><p>Es liefert auch die Steckplätze und Anschlüsse: Sockel für die CPU, Bänke für den RAM, PCIe für die Grafikkarte, SATA und USB nach außen.</p>",
+    wie: "<b>So geht es:</b> Die letzten Kabel zur Gehäusefront abziehen, die neun Schrauben lösen, das Board vorsichtig nach vorne aus der Blende ziehen."
+  }
+};
+
+const EINBAU = {
+  mainboard: [], ssd: [], netzteil: [],
+  cpu: ["mainboard"], ram: ["mainboard"], grafikkarte: ["mainboard"], kuehler: ["cpu"],
+  seitenwand: ["mainboard","cpu","kuehler","ram","grafikkarte","ssd","netzteil"],
+  netzkabel: ["netzteil","seitenwand"]
+};
+const EINBAUTEXT = {
+  mainboard: "Erst das Mainboard ins Gehäuse — daran steckt alles andere.",
+  cpu: "Erst die CPU in den Sockel, dann der Kühler darauf.",
+  netzteil: "Ohne Netzteil kein Netzkabel.",
+  seitenwand: "Die Seitenwand kommt zuletzt — sonst kommst du nicht mehr an die Teile.",
+  netzkabel: "Strom ganz zum Schluss."
+};
+const FRAGEN = [
+  { f: "Du schreibst einen Text, der Strom fällt aus — der Text ist weg. Warum?",
+    a: ["Er lag im Arbeitsspeicher, und der ist flüchtig.", "Die SSD war zu langsam.",
+        "Die CPU war zu heiß.", "Das Netzteil hat den Text gelöscht."],
+    r: 0, w: "Der RAM verliert seinen Inhalt, sobald der Strom weg ist. Gespeichert ist etwas erst auf der SSD." },
+  { f: "Wo liegt ein Programm, während es läuft?",
+    a: ["Im Arbeitsspeicher, zusammen mit seinen Daten.", "In der CPU.",
+        "Auf der Grafikkarte.", "Im Netzteil."],
+    r: 0, w: "Das ist die Von-Neumann-Idee: Programm und Daten liegen im selben Speicher. Die CPU holt sich die Befehle von dort." },
+  { f: "Welche zwei Teile stecken in der CPU?",
+    a: ["Rechenwerk und Steuerwerk.", "Arbeitsspeicher und Festplatte.",
+        "Eingabe und Ausgabe.", "Chipsatz und Bus."],
+    r: 0, w: "Das Rechenwerk rechnet und vergleicht, das Steuerwerk holt die Befehle und steuert den Ablauf." },
+  { f: "Was gehört im EVA-Prinzip zur Eingabe?",
+    a: ["Tastatur und Maus.", "Die Grafikkarte.", "Der Arbeitsspeicher.", "Das Mainboard."],
+    r: 0, w: "Im Gehäuse steckt kein einziges Eingabegerät — die hängen außen dran." },
+  { f: "Was ist mehr: 16 GB Arbeitsspeicher oder 1 TB SSD?",
+    a: ["Die SSD — ungefähr 60-mal so viel.", "Der Arbeitsspeicher.",
+        "Beides gleich viel.", "Das kann man nicht vergleichen."],
+    r: 0, w: "1 TB sind rund 1000 GB. Dafür ist der RAM viel schneller — und leer, sobald der Strom weg ist." }
+];
+
+const REIHENFOLGE = ["netzkabel","seitenwand","grafikkarte","ram","ssd","netzteil","kuehler","cpu","mainboard"];
+const SPERRTEXT = {
+  netzkabel: "Am Rechner wird nicht gearbeitet, solange er am Strom hängt. Zieh zuerst den Netzstecker.",
+  seitenwand: "Da kommst du nicht ran — die Seitenwand ist noch drauf.",
+  kuehler: "Auf der CPU sitzt der Kühler. Der muss zuerst herunter.",
+  rest: "Das Mainboard kommt zuletzt. Darauf steckt noch: "
+};
+
+const raus = new Set();
+const drin = new Set();
+let modus = "ausbau";
+let fehlversuche = 0;
+const svg = document.querySelector("svg.pc");
+const kacheln = document.getElementById("kacheln");
+const meldung = document.getElementById("meldung");
+const karte = document.getElementById("karte");
+const fortschritt = document.getElementById("fortschritt");
+
+const START = `<h2>Ein Rechner, neun Teile</h2>
+  <p>Vor dir steht ein geöffneter PC. Bau ihn Stück für Stück auseinander — aber nicht in beliebiger
+  Reihenfolge: Manches liegt unter etwas anderem, und eine Regel steht ganz am Anfang.</p>
+  <p>Zu jedem Teil erfährst du, wofür es da ist und wie man es ausbaut.</p>
+  <div class="wie"><b>Tipp:</b> Fang bei dem an, was nichts mit dem Inneren des Rechners zu tun hat.</div>`;
+
+function sagen(txt, art) {
+  meldung.className = "meldung" + (art ? " " + art : "");
+  meldung.innerHTML = txt;
+}
+
+function zeigen(id) {
+  const t = TEILE[id];
+  karte.innerHTML = `<h2>${t.name}</h2><div class="rolle">${t.rolle}</div>${t.text}<div class="wie">${t.wie}</div>`;
+}
+
+function warum(id) {
+  const fehlt = TEILE[id].braucht.filter(b => !raus.has(b));
+  if (fehlt.includes("netzkabel")) return SPERRTEXT.netzkabel;
+  if (fehlt.includes("seitenwand")) return SPERRTEXT.seitenwand;
+  if (id === "mainboard") return SPERRTEXT.rest + fehlt.map(f => TEILE[f].name).join(", ") + ".";
+  if (fehlt.includes("kuehler")) return SPERRTEXT.kuehler;
+  return "Das geht so noch nicht.";
+}
+
+function aufWerkbank(id, el) {
+  const leer = document.getElementById("leer");
+  if (leer) leer.remove();
+  const b = el.getBBox();
+  const rand = 6;
+  const d = document.createElement("div");
+  d.className = "kachel";
+  d.dataset.id = id;
+  d.onclick = () => kachelKlick(id, d);
+  d.innerHTML = `<svg viewBox="${b.x - rand} ${b.y - rand} ${b.width + 2 * rand} ${b.height + 2 * rand}">
+      <use href="#p-${id}"></use></svg><span>${TEILE[id].name.replace(/ \(.*\)/, "")}</span>`;
+  kacheln.appendChild(d);
+}
+
+function fertig() {
+  karte.innerHTML = `<h2>Alles ausgebaut</h2>
+    <p>Neun Teile, und jedes hat eine Aufgabe im EVA-Prinzip:</p>
+    <table class="eva">
+      <tr><td>Eingabe</td><td>— nichts davon! Tastatur und Maus stecken <b>außen</b> am Gehäuse. Bei Von Neumann heißt das das Eingabewerk.</td></tr>
+      <tr><td>Verarbeitung</td><td>CPU, dazu das Mainboard als Verbindung</td></tr>
+      <tr><td>Ausgabe</td><td>Grafikkarte</td></tr>
+      <tr><td>Speicher</td><td>RAM (flüchtig) und SSD (dauerhaft)</td></tr>
+      <tr><td>Versorgung</td><td>Netzteil, Kühler, Gehäuse</td></tr>
+    </table>
+    <div class="wie"><b>Von Neumann:</b> Rechenwerk und Steuerwerk sitzen in der CPU, daneben der
+    Speicher, dazu Ein- und Ausgabewerk — verbunden durch den Bus auf dem Mainboard. Das
+    Entscheidende: Im Speicher liegt auch das <b>Programm</b> selbst. So ist jeder Rechner gebaut,
+    seit 1945.<br><br>Dieselben Bausteine stecken in Handy, Konsole und Router — nur kleiner und
+    fest verlötet.</div>
+    <button id="los">Jetzt zusammenbauen →</button>`;
+  sagen("Fertig. Der Rechner ist zerlegt — und du weißt, was du in der Hand hältst.", "gut");
+  document.getElementById("los").onclick = starteEinbau;
+}
+
+function aufgabe() {
+  karte.innerHTML = `<h2>Zusammenbau</h2>
+    <p>Jetzt umgekehrt: Klick die Teile auf der Werkbank in der Reihenfolge an, in der sie
+    eingebaut werden.</p>
+    <p><b>Eingebaut:</b> ${drin.size} / 9 &nbsp;·&nbsp; <b>Fehlversuche:</b> ${fehlversuche}</p>
+    <div class="wie">Diesmal sage ich dir nur, <b>dass</b> etwas nicht geht — den Grund musst du
+    selbst wissen.</div>`;
+}
+
+function starteEinbau() {
+  modus = "einbau";
+  fehlversuche = 0;
+  document.body.classList.add("einbau");
+  document.getElementById("unterzeile").textContent =
+    "Test: Bau den Rechner wieder zusammen — in der richtigen Reihenfolge.";
+  document.querySelector("#werkbank h2").textContent = "Werkbank — klick ein Teil, um es einzubauen";
+  fortschritt.textContent = "0 / 9 eingebaut";
+  sagen("Bau den Rechner zusammen. Welches Teil kommt zuerst?");
+  aufgabe();
+}
+
+function kachelKlick(id, kachel) {
+  if (modus !== "einbau" || drin.has(id)) return;
+  const fehlt = EINBAU[id].filter(b => !drin.has(b));
+  if (fehlt.length) {
+    fehlversuche++;
+    const b = fehlt[fehlt.length - 1];
+    sagen("Das geht so noch nicht. " + (EINBAUTEXT[id] || EINBAUTEXT[b] || ""), "fehler");
+    aufgabe();
+    return;
+  }
+  drin.add(id);
+  svg.querySelector(`.teil[data-id="${id}"]`).classList.remove("weg");
+  kachel.remove();
+  fortschritt.textContent = drin.size + " / 9 eingebaut";
+  if (drin.size === REIHENFOLGE.length) {
+    const lob = fehlversuche === 0 ? "Kein einziger Fehlversuch. Das sitzt."
+      : fehlversuche <= 3 ? "Fast ohne Umweg — die Reihenfolge hast du verstanden."
+      : "Geschafft. Schau dir die Reihenfolge noch einmal an, da war einiges Raten dabei.";
+    karte.innerHTML = `<h2>Der Rechner steht</h2><p>${lob}</p>
+      <p><b>Fehlversuche:</b> ${fehlversuche}</p>
+      <div class="wie"><b>Die Reihenfolge:</b> Mainboard ins Gehäuse · CPU in den Sockel ·
+      Kühler auf die CPU · RAM in die Bänke · Grafikkarte in den PCIe-Steckplatz · SSD und
+      Netzteil · Seitenwand zu · und erst ganz zum Schluss der Strom.</div>
+      <button id="quiz">Fünf Fragen zum Schluss →</button>`;
+    sagen("Fertig zusammengebaut.", "gut");
+    document.getElementById("kacheln").innerHTML = '<span id="leer">Alles wieder eingebaut.</span>';
+    document.getElementById("quiz").onclick = () => frage(0, 0);
+  } else {
+    sagen("<b>" + TEILE[id].name + "</b> sitzt.", "gut");
+    aufgabe();
+  }
+}
+
+function frage(nr, richtig) {
+  if (nr >= FRAGEN.length) {
+    karte.innerHTML = `<h2>${richtig} von ${FRAGEN.length} richtig</h2>
+      <p>${richtig === FRAGEN.length ? "Alles sitzt — Aufbau und Prinzip."
+        : richtig >= 3 ? "Guter Stand. Schau dir die falschen Antworten noch einmal an."
+        : "Geh die Teile noch einmal durch — vor allem Speicher und CPU."}</p>
+      <button onclick="location.reload()">Von vorne</button>`;
+    sagen("Geschafft.", "gut");
+    return;
+  }
+  const q = FRAGEN[nr];
+  const folge = q.a.map((_, i) => i);
+  for (let i = folge.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [folge[i], folge[j]] = [folge[j], folge[i]];
+  }
+  karte.innerHTML = `<h2>Frage ${nr + 1} von ${FRAGEN.length}</h2><p>${q.f}</p>` +
+    folge.map(i => `<button class="antwort" data-i="${i}">${q.a[i]}</button>`).join("");
+  karte.querySelectorAll(".antwort").forEach(b => b.onclick = () => {
+    const gut = +b.dataset.i === q.r;
+    sagen((gut ? "Richtig. " : "Nicht ganz. ") + q.w, gut ? "gut" : "fehler");
+    karte.querySelectorAll(".antwort").forEach(x => x.disabled = true);
+    karte.innerHTML += `<button id="weiter">Weiter →</button>`;
+    document.getElementById("weiter").onclick = () => frage(nr + 1, richtig + (gut ? 1 : 0));
+  });
+}
+
+svg.querySelectorAll(".teil").forEach(g => {
+  g.addEventListener("click", () => {
+    const id = g.dataset.id;
+    if (modus === "einbau" || raus.has(id)) return;
+    if (TEILE[id].braucht.some(b => !raus.has(b))) {
+      sagen(warum(id), "fehler");
+      return;
+    }
+    raus.add(id);
+    aufWerkbank(id, g.querySelector("g"));
+    g.classList.add("weg");
+    zeigen(id);
+    fortschritt.textContent = raus.size + " / 9 ausgebaut";
+    if (raus.size === REIHENFOLGE.length) fertig();
+    else sagen("<b>" + TEILE[id].name + "</b> ist ausgebaut. Was kommt als Nächstes?", "gut");
+  });
+});
+
+karte.innerHTML = START;
+</script>
+</body>
+</html>
